@@ -38,7 +38,7 @@ kubectl get secrets/argocd-initial-admin-secret -n ${NAMESPACE:-argocd} --templa
 open http://localhost:8888
 
 # apply meta
-kubectl apply -n ${NAMESPACE:-argocd} ./meta
+kubectl apply -n ${NAMESPACE:-argocd} -f meta/base/application.${CLUSTER:-local}.yaml
 ```
 
 ### K3D
