@@ -1,0 +1,27 @@
+traefik:
+  namespaceOverride: traefik
+  ports:
+    web:
+      port: 80
+    websecure:
+      port: 443
+  deployment:
+    kind: DaemonSet
+  service:
+    annotations:
+      metallb.universe.tf/address-pool: metallb
+      metallb.universe.tf/allow-shared-ip: "metallb-shared"
+  volumes:
+  - name: "config"
+    mountPath: "/etc/traefik"
+    type: configMap
+  # - name: certs
+  #   mountPath: "/certs"
+  #   type: secret
+  additionalArguments:
+  - "--providers.file.filename=/etc/traefik/traefik.yaml"
+  - "--providers.file.filename=/etc/traefik/middlewares.yaml"
+  # - "--providers.file.filename=/etc/traefik/tls.yaml"
+  ingressRoute:
+    dashboard:
+      enabled: false

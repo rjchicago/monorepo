@@ -1,0 +1,22 @@
+ingress:
+  match: HostRegexp(`{domain:argocd\..+}`)
+  service: argocd-server
+  port: 80
+
+argo-cd:
+  configs:
+    params:
+      server.insecure: true
+    cm:
+      exec.enabled: false
+
+  # redis-ha:
+  #   enabled: true
+  # controller:
+  #   replicas: 1
+  # server:
+  #   replicas: 2
+  # repoServer:
+  #   replicas: 2
+  # applicationSet:
+  #   replicaCount: 2

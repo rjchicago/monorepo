@@ -1,0 +1,24 @@
+namespace: argocd
+
+sources:
+- name: apps
+  type: application
+  repo: https://github.com/rjchicago/monorepo.git
+  branch: main
+  sync: false
+  envs:
+  - local
+  appEnvs:
+  - test
+- name: infrastructure
+  type: infrastructure
+  repo: https://github.com/rjchicago/monorepo.git
+  branch: main
+  sync: false
+  envs:
+  - local
+
+destinations:
+- cluster: local
+  server: https://kubernetes.default.svc
+  env: local

@@ -1,0 +1,28 @@
+{{- $ := . }}
+{{- range $key, $source := $.Values.sources }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: {{ $source.name }}
+  namespace: {{ $.Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-99"
+spec:
+  destinations:
+    {{- range $destination := $.Values.destinations }}
+    {{- if has $destination.env $source.envs }}
+    - server: {{ $destination.server }}
+      name: {{ $destination.cluster }}
+      namespace: '*'
+    {{- end }}
+    {{- end }}
+  sourceRepos:
+    - {{ $source.repo }}
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+{{- end }}

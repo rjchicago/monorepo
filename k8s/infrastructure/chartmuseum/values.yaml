@@ -1,0 +1,21 @@
+# chartmuseum
+chartmuseum:
+  service:
+    servicename: chartmuseum
+    externalPort: 8080
+  # persistence:
+  #   enabled: true
+  #   storageClass: nfs-client
+  #   accessMode: ReadWriteOnce
+  #   size: 1Gi
+  env:
+    open:
+      DISABLE_API: false
+      AUTH_ANONYMOUS_GET: true
+    secret:
+      BASIC_AUTH_USER: test
+      BASIC_AUTH_PASS: test
+  securityContext: {}
+
+ingress:
+  match: HostRegexp(`{domain:chartmuseum\..+}`)

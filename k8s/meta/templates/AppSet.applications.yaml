@@ -1,0 +1,76 @@
+{{- $ := . }}
+{{- range $source := $.Values.sources }}
+{{- if eq $source.type "application" }}
+{{- range $destination := $.Values.destinations }}
+{{- if has $destination.env $source.envs }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: {{ printf "%s-%s" $source.name $destination.cluster }}
+  namespace: {{ $.Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-97"
+spec:
+  generators:
+  - matrix:
+      generators:
+      - git:
+          repoURL: {{ $source.repo }}
+          revision: {{ $source.branch }}
+          directories:
+          {{- range $appEnv := $source.appEnvs }}
+          {{- /*
+          template: k8s/apps/[stack]/[service]/clusters/[cluster]/envs/[env]
+          example:  k8s/apps/demo/service/clusters/local/envs/test
+          0: k8s
+          1: apps
+          2: [namespace]
+          3: [service]
+          4: clusters
+          5: [cluster]
+          6: envs
+          7: [env]
+          */}}
+          - path: {{ printf "'%s/*/*/clusters/%s/envs/%s'" $source.path $destination.cluster $appEnv }}
+          {{- end }}
+      - list:
+          elements:
+          - cluster: {{ $destination.cluster }}
+            server: {{ $destination.server }}
+  template:
+    metadata:
+      name: {{ printf "'{{path.basename}}-{{path[2]}}-{{path[3]}}'" }}
+      labels:
+        type: {{ $source.type }}
+        env: {{ printf "'{{path.basename}}'" }}
+        namespace: {{ printf "'{{path[2]}}'" }}
+        cluster: {{ printf "'{{cluster}}'" }}
+    spec:
+      project: {{ $source.name }}
+      source:
+        repoURL: {{ $source.repo }}
+        targetRevision: {{ $source.branch }}
+        path: {{ printf "'{{path[0]}}/{{path[1]}}/{{path[2]}}/{{path[3]}}'" }}
+        helm:
+          valueFiles:
+          - {{ printf "'clusters/{{path[5]}}/envs/{{path[7]}}/values.yaml'" }}
+      destination:
+        server: {{ printf "'{{server}}'" }}
+        {{- if eq $destination.env "production" }}
+        namespace: {{ printf "'{{path[2]}}'" }}
+        {{- else }}
+        namespace: {{ printf "'{{path.basename}}-{{path[2]}}'" }}
+        {{- end }}
+      syncPolicy:
+        syncOptions:
+        - CreateNamespace=true
+        {{- if $source.sync }}
+        automated:
+          prune: true
+          selfHeal: true
+        {{- end }}
+{{- end}}
+{{- end}}
+{{- end}}
+{{- end}}

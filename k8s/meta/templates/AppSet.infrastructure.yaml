@@ -1,0 +1,70 @@
+{{- $ := . }}
+{{- range $source := $.Values.sources }}
+{{- if eq $source.type "infrastructure" }}
+{{- range $destination := $.Values.destinations }}
+{{- if has $destination.env $source.envs }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: {{ printf "%s-%s" $source.name $destination.cluster }}
+  namespace: {{ $.Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-98"
+spec:
+  generators:
+  - matrix:
+      generators:
+      - git:
+          repoURL: {{ $source.repo }}
+          revision: {{ $source.branch }}
+          directories:
+          {{- /*
+          template: k8s/apps/[stack]/[service]/clusters/[cluster]/envs/[env]
+          example:  k8s/apps/demo/service/clusters/local/envs/test
+          0: k8s
+          1: infrastructure
+          2: [namespace]
+          3: clusters
+          4: [cluster]
+          */}}
+          - path: {{ printf "'%s/*/clusters/%s'" $source.path $destination.cluster }}
+      - list:
+          elements:
+          - cluster: {{ $destination.cluster }}
+            server: {{ $destination.server }}
+  template:
+    metadata:
+      name: {{ printf "'{{path[2]}}-{{cluster}}'" }}
+      annotations:
+        argocd.argoproj.io/sync-wave: "-1"
+      labels:
+        type: {{ $source.type }}
+        env: {{ $destination.env }}
+        namespace: {{ printf "'{{path[2]}}'" }}
+        cluster: {{ printf "'{{cluster}}'" }}
+    spec:
+      project: {{ $source.name }}
+      source:
+        repoURL: {{ $source.repo }}
+        targetRevision: {{ $source.branch }}
+        path: {{ printf "'{{path[0]}}/{{path[1]/{{path[2]}}'" }}
+        helm:
+          releaseName: {{ printf "'{{path[2]}}'" }}
+          valueFiles:
+          - {{ printf "'clusters/{{cluster}}/values.yaml'" }}
+      destination:
+        server: {{ printf "'{{server}}'" }}
+        namespace: {{ printf "'{{path[2]}}'" }}
+      syncPolicy:
+        syncOptions:
+        - CreateNamespace=true
+        {{- if $source.sync }}
+        automated:
+          prune: true
+          selfHeal: true
+        {{- end }}
+{{- end}}
+{{- end}}
+{{- end}}
+{{- end}}
