@@ -48,7 +48,7 @@ spec:
       source:
         repoURL: {{ $source.repo }}
         targetRevision: {{ $source.branch }}
-        path: {{ printf "'{{path[0]}}/{{path[1]/{{path[2]}}'" }}
+        path: {{ printf "'{{path[0]}}/{{path[1]}}/{{path[2]}}'" }}
         helm:
           releaseName: {{ printf "'{{path[2]}}'" }}
           valueFiles:
