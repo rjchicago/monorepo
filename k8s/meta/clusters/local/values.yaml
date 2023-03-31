@@ -6,7 +6,7 @@ sources:
   repo: https://github.com/rjchicago/monorepo.git
   branch: main
   path: k8s/apps
-  sync: false
+  sync: true
   envs:
   - local
   appEnvs:
@@ -16,7 +16,7 @@ sources:
   repo: https://github.com/rjchicago/monorepo.git
   branch: main
   path: k8s/infrastructure
-  sync: false
+  sync: true
   envs:
   - local
 

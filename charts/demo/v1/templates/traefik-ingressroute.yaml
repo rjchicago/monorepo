@@ -1,0 +1,30 @@
+{{- if and ( .Capabilities.APIVersions.Has "traefik.containo.us/v1alpha1" ) ( .Values.traefik.routes) }}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  entryPoints:
+  - web
+  - websecure
+  routes:
+  {{- range $route := .Values.traefik.routes }}
+  - kind: Rule
+    match: {{ $route.match }}
+    services:
+    - kind: Service
+      name: {{ $.Release.Name }}
+      passHostHeader: true
+      port: {{ $.Values.deployment.port }}
+      {{- if $route.sticky }}
+      sticky:
+        cookie: {}
+      {{- end }}
+    {{- if $route.middlewares}}
+    middlewares:
+    {{- range $middleware := $route.middlewares }}
+    - name: {{ $middleware.name }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}

@@ -5,23 +5,6 @@
 * Ensure you are using the correct [context](#kubeconfig).
 * Get a local test cluster with [K3D](#k3d).
 
-## Debug
-
-``` sh
-export CLUSTER=local
-export NAMESPACE=argocd
-
-cd meta
-
-helm lint -f clusters/${CLUSTER:-local}/values.yaml .
-
-# w/o cluster validation
-helm template --debug -f clusters/${CLUSTER:-local}/values.yaml .
-
-# w/ cluster validation
-helm upgrade --install --debug --dry-run -n ${NAMESPACE:-argocd} -f clusters/${CLUSTER:-local}/values.yaml argocd-meta .
-```
-
 ## Local Setup
 
 ``` sh
@@ -38,7 +21,7 @@ kubectl get secrets/argocd-initial-admin-secret -n ${NAMESPACE:-argocd} --templa
 open http://localhost:8888
 
 # apply meta
-kubectl apply -n ${NAMESPACE:-argocd} -f meta/base/application.${CLUSTER:-local}.yaml
+kubectl apply -n ${NAMESPACE:-argocd} -f .init/application.${CLUSTER:-local}.yaml
 ```
 
 ### K3D
@@ -80,4 +63,21 @@ kubectl config get-contexts
 
 # use context
 kubectl config use-context ${CONTEXT}
+```
+
+## Debug
+
+``` sh
+export CLUSTER=local
+export NAMESPACE=argocd
+
+cd meta
+
+helm lint -f clusters/${CLUSTER:-local}/values.yaml .
+
+# w/o cluster validation
+helm template --debug -f clusters/${CLUSTER:-local}/values.yaml .
+
+# w/ cluster validation
+helm upgrade --install --debug --dry-run -n ${NAMESPACE:-argocd} -f clusters/${CLUSTER:-local}/values.yaml argocd-meta .
 ```

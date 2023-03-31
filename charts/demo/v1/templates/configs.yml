@@ -1,0 +1,11 @@
+{{- if .Values.configs }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configs
+data:
+{{- range $config := .Values.configs }}
+{{ base $config.path | indent 2 }}: |
+{{ $.Files.Get $config.path | indent 4 }}
+{{- end }}
+{{- end }}

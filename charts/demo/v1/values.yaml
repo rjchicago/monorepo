@@ -1,0 +1,81 @@
+# deployment is the Kubernetes deployment resource.
+deployment:
+
+  labels:
+    foo: bar
+
+  # image is the image to be used in the container spec.
+  image: my-image
+  # tag is the image tag to be used. default is "latest". can be overridden using tagFromFile.
+  tag: v0.1.0
+  # tagFromFile is a file path to read the desired image tag from. overrides tag.
+  tagFromFile: VERSION
+
+  # replicas is the number of replicas to run in the deployment. default is 1.
+  replicas: 1
+  # port is the port to expose on the pod. default is 80.
+  port: 80
+
+  # resources are the resource requests and limits for use in the container spec.
+  resources:
+    # requests are the resources to request.
+    requests: {}
+      ## memory is the memory request amount. default is "64mi".
+      # memory: "64Mi"
+      ## cpu is the cpu request amount. default is "125m".
+      # cpu: "125m"
+    # limits are the resources limits.
+    limits: {}
+      ## memory is the memory limit. default is "512Mi".
+      # memory: "512Mi"
+      ## cpu is the cpu limit. default is "500m".
+      # cpu: "500m"
+  # health is used by the livenessProbe and readinessProbe.
+  health:
+    get: /health
+    # cmd:
+    # - echo
+    # - OK
+    config:
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 1
+      successThreshold: 1
+      failureThreshold: 3
+
+traefik:
+  routes:
+  - match: HostRegexp(`{domain:test-services\..+}`) && PathPrefix(`/foo/service`)
+    weight: 10
+    sticky: true
+    middlewares:
+    - name: test-stripprefix
+      spec:
+        stripPrefix:
+          prefixes:
+            - /foo
+            - /bar
+    - name: test-replacepathregex
+      spec:
+        replacePathRegex:
+          regex: ^/demo/service/(.*)
+          replacement: /$1
+
+environment:
+  NODE_ENV: test
+  FOO: "{bar}"
+
+secrets:
+- path: secrets/test.env
+  mountPath: /var/src/.env
+
+configs:
+- path: configs/test.json
+  mountPath: /var/src/config.json
+
+metrics:
+  enabled: true
+  labels: {}
+  path: "/metrics"
+  timeout: 60
+  interval: 60

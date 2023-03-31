@@ -1,0 +1,11 @@
+{{- range $route := .Values.traefik.routes }}
+{{- range $middleware := $route.middlewares }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ $middleware.name }}
+spec:
+{{ toYaml $middleware.spec | indent 2 }}
+{{- end }}
+{{- end }}

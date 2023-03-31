@@ -1,0 +1,24 @@
+## example:
+# https://artifacthub.io/packages/helm/chartmuseum/chartmuseum?modal=template&template=servicemonitor.yaml
+# https://github.com/prometheus-operator/prometheus-operator/blob/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- if .Values.metrics.labels }}
+    {{- toYaml .Values.metrics.labels | nindent 4 }}
+    {{- end }}
+spec:
+  endpoints:
+  - path: {{ default "/metrics" .Values.metrics.path }}
+    targetPort: {{ .Values.deployment.port }}
+    interval: {{ default 60 .Values.metrics.interval }}
+    scrapeTimeout: {{ default 10 .Values.metrics.timeout }}
+  jobLabel: {{ include "common.fullname" . }}
+  namespaceSelector:
+    matchNames:
+    - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      {{- include "common.selectorLabels" . | nindent 6 }}

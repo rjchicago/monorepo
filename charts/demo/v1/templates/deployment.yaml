@@ -1,0 +1,112 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    {{- if .Values.deployment.labels }}
+    {{- toYaml .Values.deployment.labels | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      # TODO: InitContainers (i.e. db migrations, other...)
+      # initContainers:
+      # TODO: ReadynessProbe
+      containers:
+      - name: {{ .Release.Name }}
+        {{- if .Values.deployment.tagFromFile }}
+        {{- $tag := .Files.Get .Values.deployment.tagFromFile }}
+        image: {{ printf "%s:%s" .Values.deployment.image (coalesce $tag .Values.deployment.tag "latest") }}
+        {{- else }}
+        image: {{ printf "%s:%s" .Values.deployment.image (coalesce .Values.deployment.tag "latest") }}
+        {{- end }}
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          protocol: TCP
+          containerPort: {{ .Values.deployment.port }}
+        volumeMounts:
+        {{- range $secret := .Values.secrets }}
+        - name: secrets
+          subPath: {{ base $secret.path }}
+          mountPath: {{ $secret.mountPath }}
+          readOnly: true
+        {{- end }}
+        {{- range $config := .Values.configs }}
+        - name: configs
+          subPath: {{ base $config.path }}
+          mountPath: {{ $config.mountPath }}
+          readOnly: true
+        {{- end }}
+        env:
+        {{- range $key, $val := .Values.environment }}
+        - name: {{ $key }}
+          value: {{ $val | quote }}
+        {{- end }}
+        resources:
+          requests:
+            memory: {{ default "64Mi" .Values.deployment.resources.requests.memory }}
+            cpu: {{ default "125m" .Values.deployment.resources.requests.cpu }}
+          limits:
+            memory: {{ default "512Mi" .Values.deployment.resources.limits.memory }}
+            cpu: {{ default "500m" .Values.deployment.resources.limits.cpu }}
+        {{- if .Values.deployment.health }}
+        livenessProbe:
+          {{- if .Values.deployment.health.get }}
+          httpGet:
+            path: {{ .Values.deployment.health.get }}
+            port: {{ .Values.deployment.port }}
+            scheme: HTTP
+          {{- end }}
+          {{- if .Values.deployment.health.cmd }}
+          exec:
+            command:
+            {{- range $cmd := .Values.deployment.health.cmd }}
+            - {{ $cmd }}
+            {{- end }}
+          {{- end }}
+        {{- toYaml .Values.deployment.health.config | nindent 10 }}
+        {{- end }}
+        {{- if .Values.deployment.health }}
+        readinessProbe:
+          {{- if .Values.deployment.health.get }}
+          httpGet:
+            path: {{ .Values.deployment.health.get }}
+            port: {{ .Values.deployment.port }}
+            scheme: HTTP
+          {{- end }}
+          {{- if .Values.deployment.health.cmd }}
+          exec:
+            command:
+            {{- range $cmd := .Values.deployment.health.cmd }}
+            - {{ $cmd }}
+            {{- end }}
+          {{- end }}
+{{ toYaml .Values.deployment.health.config | indent 10 }}
+        {{- end }}
+      volumes:
+      {{- if .Values.secrets }}
+      - name: secrets
+        secret:
+          secretName: {{ .Release.Name }}-secrets
+      {{- end }}
+      {{- if .Values.configs }}
+      - name: configs
+        configMap:
+          name: {{ .Release.Name }}-configs
+      {{- end }}

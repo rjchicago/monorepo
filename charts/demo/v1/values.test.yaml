@@ -1,0 +1,34 @@
+deployment:
+  image: example:latest
+  replicas: 1
+  port: 80
+
+traefik:
+  routes:
+  - match: HostRegexp(`{domain:test-services\..+}`) && PathPrefix(`/foo/service`)
+    weight: 10
+    sticky: true
+    middlewares:
+    - name: test-stripprefix
+      spec:
+        stripPrefix:
+          prefixes:
+            - /foo
+            - /bar
+    - name: test-replacepathregex
+      spec:
+        replacePathRegex:
+          regex: ^/demo/service/(.*)
+          replacement: /$1
+
+environment:
+  NODE_ENV: test
+  FOO: bar
+
+secrets:
+- path: secrets/test.env
+  mountPath: /var/src/.env
+
+configs:
+- path: configs/test.json
+  mountPath: /var/src/config.json
