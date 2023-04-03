@@ -2,7 +2,7 @@ namespace: argocd
 
 sources:
 - name: apps
-  type: application
+  type: apps
   repo: https://github.com/rjchicago/monorepo.git
   branch: main
   path: k8s/apps
@@ -11,11 +11,11 @@ sources:
   - local
   appEnvs:
   - test
-- name: infrastructure
-  type: infrastructure
+- name: core
+  type: core
   repo: https://github.com/rjchicago/monorepo.git
   branch: main
-  path: k8s/infrastructure
+  path: k8s/core
   sync: true
   envs:
   - local

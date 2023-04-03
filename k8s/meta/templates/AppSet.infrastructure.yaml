@@ -1,6 +1,6 @@
 {{- $ := . }}
 {{- range $source := $.Values.sources }}
-{{- if eq $source.type "infrastructure" }}
+{{- if eq $source.type "core" }}
 {{- range $destination := $.Values.destinations }}
 {{- if has $destination.env $source.envs }}
 ---
@@ -23,7 +23,7 @@ spec:
           template: k8s/apps/[stack]/[service]/clusters/[cluster]/envs/[env]
           example:  k8s/apps/demo/service/clusters/local/envs/test
           0: k8s
-          1: infrastructure
+          1: core
           2: [namespace]
           3: clusters
           4: [cluster]
