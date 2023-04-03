@@ -1,6 +1,6 @@
 {{- $ := . }}
 {{- range $source := $.Values.sources }}
-{{- if eq $source.type "application" }}
+{{- if eq $source.type "apps" }}
 {{- range $destination := $.Values.destinations }}
 {{- if has $destination.env $source.envs }}
 ---

@@ -9,7 +9,7 @@
 
 ``` sh
 # install argocd
-helm upgrade --install --create-namespace -n ${NAMESPACE:-argocd} --dependency-update --timeout 5m --wait argocd ./infrastructure/argocd
+helm upgrade --install --create-namespace -n ${NAMESPACE:-argocd} --dependency-update --timeout 5m --wait argocd ./core/argocd
 
 # port forward
 ( exec -a pf8888 kubectl port-forward svc/argocd-server -n ${NAMESPACE:-argocd} 8888:443 > /dev/null ) &
@@ -21,7 +21,7 @@ kubectl get secrets/argocd-initial-admin-secret -n ${NAMESPACE:-argocd} --templa
 open http://localhost:8888
 
 # apply meta
-kubectl apply -n ${NAMESPACE:-argocd} -f .init/application.${CLUSTER:-local}.yaml
+kubectl apply -n ${NAMESPACE:-argocd} -f start/${CLUSTER:-local}.yaml
 ```
 
 ### K3D
